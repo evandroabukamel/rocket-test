@@ -1,5 +1,6 @@
-import type { RakeReport } from '../../domain/ledger/RakeReport';
-import { notImplemented } from '../../domain/shared/errors';
+import type { Anomaly } from '../../domain/ledger/Anomaly';
+import type { CurrencyTotals, RakeReport, RefundEntry } from '../../domain/ledger/RakeReport';
+import type { RakeSplit } from '../../domain/rake/RakeSplit';
 
 interface SplitJson {
   net: string;
@@ -32,6 +33,42 @@ export interface ReportJson {
   anomalies: { event_id: number | null; kind: string; detail: string }[];
 }
 
+const splitJson = ({ net, engine, operator }: RakeSplit): SplitJson => ({
+  net: net.toString(),
+  engine: engine.toString(),
+  operator: operator.toString(),
+});
+
+function currencyJson(totals: CurrencyTotals): SplitJson & { play_money?: true } {
+  return totals.playMoney ? { ...splitJson(totals), play_money: true } : splitJson(totals);
+}
+
+const refundJson = (entry: RefundEntry): RefundEntryJson => ({
+  event_id: entry.eventId,
+  operator: entry.operator,
+  reference: entry.reference,
+  amount: entry.amount.toString(),
+  currency: entry.currency,
+});
+
+const anomalyJson = ({ eventId, kind, detail }: Anomaly) => ({ event_id: eventId, kind, detail });
+
+const mapValues = <A, B>(record: Readonly<Record<string, A>>, fn: (value: A) => B): Record<string, B> =>
+  Object.fromEntries(Object.entries(record).map(([key, value]) => [key, fn(value)]));
+
 export function reportToJson(report: RakeReport): ReportJson {
-  return notImplemented(`reportToJson(cursor ${report.cursor})`);
+  return {
+    cursor: report.cursor,
+    totals: mapValues(report.totals, (currencies) =>
+      mapValues(currencies as Record<string, CurrencyTotals>, currencyJson),
+    ),
+    totals_brl_cents: mapValues(report.totalsBrlCents, splitJson),
+    pending_refunds: report.pendingRefunds.map(refundJson),
+    excess_refunds: report.excessRefunds.map(refundJson),
+    conflicts: [...report.conflicts],
+    duplicates_ignored: [...report.duplicatesIgnored],
+    voided: [...report.voided],
+    pending_voids: [...report.pendingVoids],
+    anomalies: report.anomalies.map(anomalyJson),
+  };
 }

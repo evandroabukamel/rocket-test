@@ -3,8 +3,8 @@
 Leitor do feed de rake do lado do operador: recebe páginas de eventos (cobrança, estorno, anulação)
 e mantém o livro por operador, por moeda e consolidado em reais.
 
-> Estado atual: **fase vermelha do TDD**. Os tipos e as assinaturas estão definidos; os corpos
-> lançam `not implemented`, e a suíte descreve o comportamento esperado.
+O exemplo do enunciado (`data/`) chega exatamente nos números esperados; ver
+`test/acceptance/example-feed.test.ts`.
 
 ## Como rodar
 
@@ -59,11 +59,13 @@ implementa as portas da `application`. O domínio não conhece JSON, arquivo nem
 | Estorno em moeda diferente da cobrança | Não é aplicado; anomalia `currency_mismatch` | Converter seria inventar uma cotação. |
 | Cobrança sem contrato ou cotação vigente | Não é contabilizada; os estornos ficam pendentes; anomalia `missing_terms` | Sem os termos não dá para prender bps e cotação (regra 3). |
 | Anulação antes do alvo | Fica pendente (`pending_voids`); o alvo já nasce anulado | Mesma lógica da regra 7. |
-| Anulação de anulação | Rejeitada (`void_targets_void`) | A rede desfaz transações, não anulações. |
-| Anulação de BRL/FUN | Rejeitada (`void_targets_non_crypto`); o evento continua contando | Reorganização de cadeia só existe em cripto; não apagar dinheiro em silêncio. |
+| Anulação de anulação | Rejeitada (`void_targets_void`), inclusive quando a anulação chegou antes do alvo | A rede desfaz transações, não anulações. |
+| Anulação de BRL/FUN | Aplicada como qualquer outra | O enunciado fala em reorganização de cadeia, mas o próprio exemplo anula a cobrança 8, em BRL, e espera `voided: [8]`. O feed é a fonte da verdade. |
 | Segunda anulação do mesmo alvo | Rejeitada (`void_already_applied`) | Não tem efeito; fica visível no relatório. |
 | Evento anulado que reaparece numa página relida | Repetição; continua anulado | A regra 5 vale antes da 8. |
 | Linha de moeda zerada | Continua no relatório se houver cobrança efetiva | Bate com o exemplo (aurora BRL = 0). |
+| Operador só com FUN | Não aparece em `totals_brl_cents` | Não há nada em reais para mostrar; aparecer com zero sugeriria o contrário. |
+| Restauração do snapshot | Reaplica os eventos guardados, na ordem de chegada | O estado derivado sai igual por construção; o custo é O(eventos) na subida (ver pergunta 2). |
 | Evento inválido no fio | Vira anomalia `invalid_event`; a página continua; o cursor avança se o id for legível | Um item ruim não pode travar o feed. |
 | Campos desconhecidos no evento | Ignorados pelo decoder e fora da comparação da regra 5 | Permite o motor subir antes do leitor (pergunta 5). |
 | `totals_brl_cents` na saída | Texto, não number | A soma de um mês pode passar de 2^53. |

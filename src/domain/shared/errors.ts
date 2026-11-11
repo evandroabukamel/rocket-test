@@ -7,8 +7,3 @@ export abstract class DomainError extends Error {
     this.name = new.target.name;
   }
 }
-
-/** Marca um ponto do esqueleto ainda não implementado (fase vermelha do TDD). */
-export function notImplemented(what: string): never {
-  throw new Error(`not implemented: ${what}`);
-}
