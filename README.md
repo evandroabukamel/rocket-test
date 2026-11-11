@@ -15,7 +15,7 @@ npm install
 npm test            # vitest
 npm run typecheck   # tsc --noEmit
 npm start           # roda o exemplo do enunciado (data/) e imprime o relatório
-npm start -- pages.json contracts.json prices.json --state state/ledger.json
+npm start -- data/pages.json data/contracts.json data/prices.json --state state/ledger.json
 ```
 
 ## Arquitetura (Clean Architecture + DDD)
