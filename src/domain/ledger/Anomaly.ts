@@ -15,8 +15,6 @@ export type AnomalyKind =
   | 'missing_terms'
   /** Anulação apontando para outra anulação. */
   | 'void_targets_void'
-  /** Anulação de evento em moeda que não é cripto (não existe reorganização de cadeia em BRL/FUN). */
-  | 'void_targets_non_crypto'
   /** Segunda anulação para um evento que já está anulado. */
   | 'void_already_applied';
 

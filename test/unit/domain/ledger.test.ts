@@ -202,22 +202,22 @@ describe('RakeLedger', () => {
         expect(report.anomalies).toEqual([expect.objectContaining({ eventId: 12, kind: 'void_targets_void' })]);
       });
 
-      it('anulação de evento em BRL é rejeitada e o evento continua contando', () => {
-        const ledger = ledgerWith(charge(1, 'aurora', 'A', 500n, 'BRL'));
-        expect(ledger.apply(voidOf(2, 1))).toBe('rejected');
-        const report = ledger.report();
-        expect(report.voided).toEqual([]);
-        expect(report.totals.aurora?.BRL?.net).toBe(500n);
-        expect(report.anomalies).toEqual([expect.objectContaining({ eventId: 2, kind: 'void_targets_non_crypto' })]);
-      });
-
-      it('anulação pendente cujo alvo chega em FUN também é rejeitada', () => {
-        const ledger = ledgerWith(voidOf(2, 1), charge(1, 'delta', 'H', 1000n, 'FUN'));
+      it('anulação pendente cujo alvo chega como outra anulação também é rejeitada', () => {
+        const ledger = ledgerWith(charge(8, 'aurora', 'D', 200n, 'ETH'), voidOf(12, 11), voidOf(11, 8));
         const report = ledger.report();
         expect(report.pendingVoids).toEqual([]);
-        expect(report.voided).toEqual([]);
-        expect(report.totals.delta?.FUN?.net).toBe(1000n);
-        expect(report.anomalies).toEqual([expect.objectContaining({ eventId: 2, kind: 'void_targets_non_crypto' })]);
+        expect(report.voided).toEqual([8]);
+        expect(report.anomalies).toEqual([expect.objectContaining({ eventId: 12, kind: 'void_targets_void' })]);
+      });
+
+      it('anulação vale em qualquer moeda (o exemplo do enunciado anula uma cobrança em BRL)', () => {
+        const ledger = ledgerWith(charge(1, 'aurora', 'A', 500n, 'BRL'), charge(2, 'delta', 'H', 1000n, 'FUN'));
+        expect(ledger.apply(voidOf(3, 1))).toBe('applied');
+        expect(ledger.apply(voidOf(4, 2))).toBe('applied');
+        const report = ledger.report();
+        expect(report.voided).toEqual([1, 2]);
+        expect(report.totals).toEqual({});
+        expect(report.anomalies).toEqual([]);
       });
 
       it('segunda anulação para o mesmo alvo é rejeitada', () => {
