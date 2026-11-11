@@ -1,6 +1,5 @@
 import type { CurrencyCode } from '../money/Currency';
 import type { MinorUnits } from '../money/MinorUnits';
-import { notImplemented } from '../shared/errors';
 
 export type EventId = number;
 export type OperatorId = string;
@@ -37,7 +36,13 @@ export type FeedEvent = MoneyEvent | VoidEvent;
  * Compara só os campos de domínio (campos extras do fio já foram descartados pelo decoder).
  */
 export function sameContent(a: FeedEvent, b: FeedEvent): boolean {
-  return notImplemented(`sameContent(${a.id}, ${b.id})`);
+  if (a.id !== b.id || a.kind !== b.kind) return false;
+  if (a.kind === 'void' || b.kind === 'void') {
+    return a.kind === 'void' && b.kind === 'void' && a.voidsId === b.voidsId;
+  }
+  return (
+    a.operator === b.operator && a.reference === b.reference && a.amount === b.amount && a.currency === b.currency
+  );
 }
 
 /** Uma inscrição é identificada por operador + reference (a mesma reference pode existir em dois operadores). */

@@ -1,5 +1,5 @@
 import type { MinorUnits } from '../money/MinorUnits';
-import { DomainError, notImplemented } from '../shared/errors';
+import { DomainError } from '../shared/errors';
 
 /** 1 bps = 0,01%. 1500 bps = 15%. */
 export type BasisPoints = number;
@@ -26,7 +26,10 @@ export interface RakeSplit {
  * @throws InvalidBasisPointsError para bps fora de 0..10000; RangeError para net negativo (bug de quem chama).
  */
 export function splitRake(net: MinorUnits, bps: BasisPoints): RakeSplit {
-  return notImplemented(`splitRake(${net}, ${bps})`);
+  if (!Number.isInteger(bps) || bps < 0 || bps > Number(BPS_DENOMINATOR)) throw new InvalidBasisPointsError(bps);
+  if (net < 0n) throw new RangeError(`net must not be negative (${net})`);
+  const engine = (net * BigInt(bps)) / BPS_DENOMINATOR;
+  return { net, engine, operator: net - engine };
 }
 
 export const ZERO_SPLIT: RakeSplit = { net: 0n, engine: 0n, operator: 0n };

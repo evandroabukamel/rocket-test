@@ -1,4 +1,4 @@
-import { DomainError, notImplemented } from '../shared/errors';
+import { DomainError } from '../shared/errors';
 
 /**
  * Quantia na menor unidade da moeda. Sempre `bigint`: 25 ETH em wei já não cabem em 64 bits,
@@ -14,11 +14,15 @@ export class InvalidAmountError extends DomainError {
   }
 }
 
+/** Só dígitos ASCII, sem zero à esquerda, e diferente de zero. */
+const CANONICAL_POSITIVE_INTEGER = /^[1-9][0-9]*$/;
+
 /**
  * Converte o texto do feed para menor unidade.
  * Aceita só inteiro positivo em forma canônica (sem sinal, sem zero à esquerda, sem decimal
  * nem expoente), para que "500" e "0500" nunca sejam tratados como conteúdos diferentes.
  */
 export function parseMinorUnits(raw: string): MinorUnits {
-  return notImplemented(`parseMinorUnits(${raw})`);
+  if (!CANONICAL_POSITIVE_INTEGER.test(raw)) throw new InvalidAmountError(raw);
+  return BigInt(raw);
 }
