@@ -74,4 +74,85 @@ implementa as portas da `application`. O domínio não conhece JSON, arquivo nem
 
 ## Respostas da seção 5
 
-_A escrever._
+### 1. Anulação três meses depois
+
+O livro indexa os eventos por id e por inscrição. Uma anulação recalcula só a inscrição do alvo,
+com custo proporcional aos eventos dela (normalmente 1 a 3), e os totais recebem a diferença.
+Não há reprocessamento do feed. Para isso funcionar em produção, os eventos de cada inscrição
+precisam ficar guardados (num banco, indexados por id) enquanto uma anulação ainda puder chegar.
+O relatório de um mês fechado e enviado não é reescrito: período fechado é imutável. A mudança
+entra como **ajuste no período aberto**, com referência à competência original e ao evento anulado.
+Isso exige registrar cada diferença de inscrição com duas datas: quando aconteceu (competência) e
+quando o livro ficou sabendo (reconhecimento). Reemitir o mês antigo é decisão do financeiro; o
+livro entrega as duas visões.
+
+### 2. Ids vistos crescem sem parar
+
+Dá para guardar menos, em camadas:
+- conteúdo completo só para inscrições ainda abertas (que podem receber estorno ou anulação);
+- para as encerradas, só o resultado final;
+- para saber se um id já foi visto, como os ids são crescentes: guardar o cursor e a lista de
+  buracos (ids pulados). Todo id até o cursor que não está na lista já foi visto. Buraco mais velho
+  que um prazo combinado com o motor é descartado;
+- para separar repetição de conflito, um hash do conteúdo só dos ids dentro desse prazo.
+
+Guardando **só o cursor**, perde-se quase tudo o que a regra 5 protege: um evento repetido abaixo
+do cursor é descartado sem checar conteúdo, e um conflito passa em silêncio. Um id menor que chegue
+atrasado (os ids podem pular números) é perdido. E a anulação precisa do conteúdo do alvo para
+saber qual inscrição recalcular. Só o cursor serve se o motor garantir, por contrato, que só reenvia
+a partir do cursor e nunca muda um evento publicado.
+
+### 3. Cotação do ETH errada por 40 minutos
+
+Os valores em wei estão certos; só a consolidação em reais está errada. Pela regra 3, essas
+inscrições ficaram presas à cotação errada, então corrigir exige uma exceção explícita à regra.
+O que eu faria:
+- **evitar**: rejeitar ou segurar cotações com variação acima de um limite em relação à anterior,
+  e alertar;
+- **corrigir**: a tabela de cotações é versionada; publica-se uma correção para aquela janela de
+  `from_id`, sem apagar a original, e recalculam-se só as inscrições com cobrança na janela (com um
+  índice de id da cobrança → inscrição); as diferenças entram como ajuste (pergunta 1);
+- marcar essas inscrições como "cotação em revisão" até a decisão.
+
+Quem decide é o financeiro, conforme o que o contrato com o operador disser sobre
+a fonte de cotação. A engenharia dá a ferramenta e a trilha de auditoria, e nunca corrige em silêncio.
+
+### 4. 50 operadores e 10 milhões de eventos por mês
+
+Nenhuma regra da seção 3 cruza operadores: tudo é por inscrição (operador + reference) ou por
+operador. Então a divisão natural é **por operador**. O melhor caminho é o motor oferecer um feed
+por operador, com cursor próprio. Se o feed continuar único, um roteador lê e distribui por operador
+(como uma chave de partição). Dois cuidados:
+- a anulação não traz o operador; o roteador precisa de um índice id → operador, e segura anulações
+  cujo alvo ainda não viu;
+- o conflito de um id que mudou de operador só é visível no roteador, então a regra 5 também é
+  checada lá.
+
+Cada partição tem seu snapshot; o cursor global confirmado é o menor entre as partições. Vale dizer:
+10 milhões por mês são cerca de 4 eventos por segundo, e um processo dá conta da CPU. O gargalo real
+é o estado e o tempo de restauração, não o processamento.
+
+### 5. Campo novo no evento, sem combinar deploy
+
+A regra é: mudança só aditiva, com campo opcional, e sem mudar o significado dos campos existentes.
+- **Motor sobe antes**: o leitor antigo ignora campos desconhecidos (o decoder já faz isso) e a
+  comparação da regra 5 usa só os campos conhecidos, então nada vira conflito.
+- **Operador sobe antes**: o leitor novo trata o campo como opcional, com um valor padrão, porque
+  os eventos continuam chegando sem ele.
+- **No meio da troca**: o mesmo id pode chegar sem o campo e depois com o campo. "Ausente" tem de
+  valer como "desconhecido", não como conteúdo diferente; senão a troca gera conflitos falsos.
+
+Se o significado mudar, é outro `kind` ou outra versão da rota, rodando em paralelo. Testes de
+contrato entre motor e leitor no CI pegam a quebra antes do deploy.
+
+### 6. Inscrição reenviada, dois pedidos em instâncias diferentes
+
+O operador manda uma chave de idempotência (o id do pedido dele). O motor tem uma restrição de
+unicidade no banco em (operador, chave), e outra em (torneio, jogador) para o assento. A inscrição,
+a cobrança e o assento são gravados na mesma transação. As duas instâncias tentam inserir; o banco
+deixa uma só passar. A outra recebe a violação de unicidade, lê o registro existente e devolve
+**a mesma resposta** da primeira (mesmo id de inscrição e mesmo corpo, com um indicador de que é
+repetição). Se a primeira ainda estiver em andamento, a segunda responde "em processamento, tente de
+novo" com a mesma chave. Mesma chave com conteúdo diferente é erro (o equivalente da regra 5). A chave
+também vai para a carteira, para o débito ser idempotente. Um lock distribuído pode ajudar no
+desempenho, mas quem garante é a restrição do banco.
