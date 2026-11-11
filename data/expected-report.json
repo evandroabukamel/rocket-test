@@ -1,0 +1,28 @@
+{
+  "cursor": 16,
+  "totals": {
+    "aurora": {
+      "BRL": { "net": "0", "engine": "0", "operator": "0" },
+      "USDT": { "net": "1499999", "engine": "224999", "operator": "1275000" },
+      "ETH": { "net": "3000000000000000000", "engine": "450000000000000000", "operator": "2550000000000000000" }
+    },
+    "delta": {
+      "BRL": { "net": "400", "engine": "80", "operator": "320" },
+      "BTC": { "net": "100000", "engine": "10000", "operator": "90000" },
+      "ETH": { "net": "20000000000000000000", "engine": "2000000000000000000", "operator": "18000000000000000000" },
+      "FUN": { "net": "1000", "engine": "100", "operator": "900", "play_money": true }
+    }
+  },
+  "totals_brl_cents": {
+    "aurora": { "net": 5700809, "engine": 855121, "operator": 4845688 },
+    "delta": { "net": 40035400, "engine": 4003580, "operator": 36031820 }
+  },
+  "pending_refunds": [],
+  "excess_refunds": [
+    { "event_id": 7, "operator": "aurora", "reference": "D", "amount": "100", "currency": "BRL" },
+    { "event_id": 13, "operator": "aurora", "reference": "A", "amount": "50", "currency": "BRL" }
+  ],
+  "conflicts": [5],
+  "duplicates_ignored": [4],
+  "voided": [8]
+}

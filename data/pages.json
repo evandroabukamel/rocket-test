@@ -1,0 +1,26 @@
+[
+  [
+    { "id": 1, "kind": "charge", "operator": "aurora", "reference": "A", "amount": "500", "currency": "BRL" },
+    { "id": 2, "kind": "charge", "operator": "aurora", "reference": "B", "amount": "2500000", "currency": "USDT" },
+    { "id": 3, "kind": "charge", "operator": "delta", "reference": "C", "amount": "25000000000000000000", "currency": "ETH" },
+    { "id": 4, "kind": "refund", "operator": "aurora", "reference": "A", "amount": "500", "currency": "BRL" },
+    { "id": 5, "kind": "charge", "operator": "delta", "reference": "E", "amount": "150000", "currency": "BTC" },
+    { "id": 6, "kind": "charge", "operator": "delta", "reference": "H", "amount": "1000", "currency": "FUN" }
+  ],
+  [
+    { "id": 4, "kind": "refund", "operator": "aurora", "reference": "A", "amount": "500", "currency": "BRL" },
+    { "id": 5, "kind": "charge", "operator": "delta", "reference": "E", "amount": "160000", "currency": "BTC" },
+    { "id": 7, "kind": "refund", "operator": "aurora", "reference": "D", "amount": "300", "currency": "BRL" },
+    { "id": 8, "kind": "charge", "operator": "aurora", "reference": "D", "amount": "200", "currency": "BRL" },
+    { "id": 9, "kind": "refund", "operator": "aurora", "reference": "B", "amount": "1000001", "currency": "USDT" },
+    { "id": 10, "kind": "refund", "operator": "delta", "reference": "E", "amount": "50000", "currency": "BTC" },
+    { "id": 11, "kind": "void", "voids_id": 8 }
+  ],
+  [
+    { "id": 12, "kind": "charge", "operator": "aurora", "reference": "G", "amount": "3000000000000000000", "currency": "ETH" },
+    { "id": 13, "kind": "refund", "operator": "aurora", "reference": "A", "amount": "50", "currency": "BRL" },
+    { "id": 14, "kind": "charge", "operator": "delta", "reference": "F", "amount": "400", "currency": "BRL" },
+    { "id": 15, "kind": "refund", "operator": "delta", "reference": "C", "amount": "5000000000000000000", "currency": "ETH" },
+    { "id": 16, "kind": "charge", "operator": "aurora", "reference": "D", "amount": "200", "currency": "BRL" }
+  ]
+]

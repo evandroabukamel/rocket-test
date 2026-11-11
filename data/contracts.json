@@ -1,0 +1,5 @@
+[
+  { "operator": "aurora", "from_id": 1, "engine_bps": 1500 },
+  { "operator": "delta", "from_id": 1, "engine_bps": 1000 },
+  { "operator": "delta", "from_id": 8, "engine_bps": 2000 }
+]

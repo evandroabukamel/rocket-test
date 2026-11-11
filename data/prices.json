@@ -1,0 +1,7 @@
+[
+  { "currency": "USDT", "from_id": 1, "brl": "5.40" },
+  { "currency": "USDT", "from_id": 9, "brl": "5.35" },
+  { "currency": "BTC", "from_id": 1, "brl": "350000.00" },
+  { "currency": "ETH", "from_id": 1, "brl": "20000.00" },
+  { "currency": "ETH", "from_id": 12, "brl": "19000.00" }
+]
